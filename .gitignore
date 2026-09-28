@@ -1,0 +1,14 @@
+# Phụ thuộc cài bằng npm ci — không commit
+node_modules/
+
+# Cấu hình local chứa key/token
+.env
+
+# Key service account — TUYỆT ĐỐI không commit
+serviceAccount*.json
+
+# Log chạy thử local
+*.log
+
+# Ghi chú: KHÔNG thêm package-lock.json vào đây — lock file PHẢI commit
+# (workflow dùng cache: npm + npm ci, cần lock tồn tại và khớp package.json).

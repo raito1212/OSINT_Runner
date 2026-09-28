@@ -1,0 +1,69 @@
+# OSINT Runner — quét nguồn HTTP-thuần on-demand (KHÔNG cron, chỉ workflow_dispatch)
+# Thiết kế: plans/chitiet/thiet-ke-runner.md mục 3 + GHI ĐÈ của plans/KE_HOACH_LAM_LAI_ONLINE_FREE.md mục 2.6
+# (inputs đủ 5: tenantId, sourceIds, lastHours, dryRun, dispatchToken).
+# Khác AutoCollectingNews/.github/workflows/collect.yml: bỏ cron + khối commit state
+# (state nằm trên Firestore, không commit lại repo) + permissions chỉ đọc.
+name: OSINT Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenantId:
+        description: "ID tenant — path Firestore tenants/{tenantId}"
+        required: true
+        type: string
+      sourceIds:
+        description: 'JSON array id nguồn cần quét, vd ["s1","s2"]; "all" = mọi nguồn HTTP-thuần active'
+        required: false
+        default: '"all"'
+        type: string
+      lastHours:
+        description: "Cửa sổ thời gian nhìn lại (giờ), mặc định 26"
+        required: false
+        default: "26"
+        type: string
+      dryRun:
+        description: "Chỉ quét + in ứng viên — bỏ kiểm tra token, không ghi Firestore, không gọi Gemini"
+        required: false
+        default: false
+        type: boolean
+      dispatchToken:
+        description: "Token chống dispatch chéo tenant — runner so với settings.dispatchToken của tenant đích (sai → exit 2)"
+        required: true
+        type: string
+
+# State ghi lên Firestore → workflow chỉ cần đọc code, KHÔNG cần write
+permissions:
+  contents: read
+
+# Xếp hàng theo tenant: 2 tenant khác nhau chạy song song, cùng tenant thì chờ
+# (không cancel run đang chạy — bài đang dở không bị bỏ giữa chừng)
+concurrency:
+  group: scan-${{ inputs.tenantId }}
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cài phụ thuộc
+        run: npm ci
+
+      - name: Quét nguồn HTTP-thuần
+        env:
+          # Secret duy nhất của repo: chuỗi JSON key SA đầy đủ (README mục Runbook)
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TENANT_ID: ${{ inputs.tenantId }}
+          SOURCE_IDS: ${{ inputs.sourceIds }}
+          LAST_HOURS: ${{ inputs.lastHours }}
+          DRY_RUN: ${{ inputs.dryRun }}
+          DISPATCH_TOKEN: ${{ inputs.dispatchToken }}
+        run: node scan.js

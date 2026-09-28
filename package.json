@@ -1,0 +1,20 @@
+{
+  "name": "osint-runner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runner quét nguồn OSINT HTTP-thuần (rss/gnews/telegram/website) on-demand bằng GitHub Actions, ghi bài về Firestore theo tenant",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "scan": "node scan.js"
+  },
+  "dependencies": {
+    "axios": "^1",
+    "cheerio": "^1",
+    "firebase-admin": "^12",
+    "google-news-url-decoder": "^1.2.2",
+    "p-limit": "^3.1.0",
+    "rss-parser": "^3.13"
+  }
+}
