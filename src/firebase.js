@@ -12,7 +12,8 @@
 //                                    githubRepo, dispatchToken, ttlDays (2.2.4)
 //   tenants/{t}/ai_rules/main      — promptTemplate (quy tắc thuần, KHÔNG biến {{...}})
 //   tenants/{t}/dictionary/{id}    — {from: EN, to: VN} — glossary prompt
-//   tenants/{t}/sources/{id}       — query is_active == true
+//   tenants/{t}/sources/{id}       — query active == true (field `active` —
+//                                    trùng schema web SourceManager + agent)
 //   tenants/{t}/posts/{postId}     — schema FLAT 2.2, upsert MERGE (chỉ giữ 'done')
 //   tenants/{t}/scan_state/{srcId} — schema 2.2.3 (seen mảng {h|u,t} cap 200/100)
 //   tenants/{t}/scan_state/_last_run — tóm tắt lượt chạy
@@ -153,11 +154,12 @@ async function readDictionary(tenantId, cap) {
     return snap.docs.map((d) => d.data());
 }
 
-/** Mọi nguồn đang bật (is_active == true) — kèm id doc; lọc theo type là việc runScan. */
+/** Mọi nguồn đang bật (active == true) — kèm id doc; lọc theo type là việc runScan.
+ *  Field `active` theo schema web (firestore.js addSource/import) + agent — KHÔNG phải `is_active`. */
 async function listActiveSources(tenantId) {
     const snap = await requireDb()
         .collection(tpath(tenantId, 'sources'))
-        .where('is_active', '==', true)
+        .where('active', '==', true)
         .get();
     return snap.docs.map((d) => ({ ...d.data(), id: d.id }));
 }

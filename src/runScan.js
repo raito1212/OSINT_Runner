@@ -170,7 +170,7 @@ async function runScan({ tenantId, sourceIds, lastHours, dryRun = false, dispatc
 
     // ===== B2: chọn nguồn HTTP-thuần active; thứ tự SOURCE_SCAN_ORDER, trong loại sort theo tên =====
     const httpTypes = new Set(HTTP_SOURCE_TYPES);
-    const active = allSources.filter((s) => s && s.id && httpTypes.has(s.type) && s.is_active !== false);
+    const active = allSources.filter((s) => s && s.id && httpTypes.has(s.type) && s.active !== false);
     const byId = new Map(active.map((s) => [s.id, s]));
     let selected = active;
     if (wanted !== 'all') {
