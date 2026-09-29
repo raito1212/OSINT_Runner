@@ -75,7 +75,20 @@ function initFirebase() {
     if (inline) {
         raw = inline;
     } else if (file) {
-        raw = fs.readFileSync(path.resolve(file), 'utf8');
+        const filePath = path.resolve(file);
+        try {
+            raw = fs.readFileSync(filePath, 'utf8');
+        } catch (e) {
+            if (e.code === 'ENOENT') {
+                throw new Error(
+                    `[firebase] Chưa có file key tại ${filePath} — local dry-run cần file này: `
+                    + 'Firebase Console → Project settings → Service accounts → Generate new private key, '
+                    + 'lưu đè lên đường dẫn trên (file đã bị .gitignore loại khỏi commit). '
+                    + 'Xem .env.example'
+                );
+            }
+            throw e;
+        }
     } else {
         throw new Error('[firebase] Thiếu FIREBASE_SERVICE_ACCOUNT (JSON inline) hoặc FIREBASE_SERVICE_ACCOUNT_FILE (đường dẫn file) — xem .env.example');
     }
